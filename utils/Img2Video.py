@@ -103,31 +103,34 @@ class Img2Video(QWidget):
         question.setIcon(QMessageBox.Information)
         question.setWindowTitle('提示')
         question.setText("选择时间戳文件或输入fps")
-        question.addButton("选择文件", QMessageBox.YesRole)
-        question.addButton("输入fps", QMessageBox.NoRole)
+        question.addButton("选择文件", QMessageBox.AcceptRole)
+        question.addButton("输入fps", QMessageBox.RejectRole)
 
         api = question.exec_()
-        if api == QMessageBox.YesRole:
+        if api == QMessageBox.AcceptRole:
             dialog = QFileDialog(self)
-            self.times_path = dialog.getOpenFileUrl()[0].toLocalFile()
+            self.times_path = dialog.getOpenFileUrl(filter='*.txt')
+            self.times_path = self.times_path[0].toLocalFile()
             self.show_info()
             if os.path.exists(self.times_path):
                 with open(self.times_path) as fp:
                     lines = fp.readlines()
                     final = lines[-1].strip()
-                    fps = float(final) / len(lines)
-                    fps = int(fps)
+                    fps = len(lines)/float(final)
+                    fps = round(fps)
                     self.fps = fps
-                    print(self.fps)
-        elif api == QMessageBox.NoRole:
+
+        elif api == QMessageBox.RejectRole:
             i, okPressed = QInputDialog.getInt(self, "输入fps", "fps:", 10, 0, 1000, 1)
             if okPressed:
+                self.times_path = ""
                 self.fps = i
                 self.show_info()
         else:
             return
 
     def begin_task(self):
+        self.show_info()
         if not os.path.exists(self.img_dir):
             QMessageBox.warning(self,"警告", ""f"文件夹{self.img_dir}不存在")
             return
@@ -135,7 +138,6 @@ class Img2Video(QWidget):
             QMessageBox.warning(self, "警告", f"fps: {self.fps} 不能小于0")
             return
 
-        self.show_info()
         save_path = self.img_dir + '.avi'
         t = WorkThread(self, self.img_dir, save_path, self.fps)
         t.process.connect(self.call_backlog)
