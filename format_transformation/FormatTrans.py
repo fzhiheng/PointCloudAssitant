@@ -1,13 +1,12 @@
 # -- coding: utf-8 --
-import glob
 import os
+import glob
 import numpy as np
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from typing import List
 
-from threading import Thread
 from concurrent import futures
 from .generate_ply import npy2ply
 
@@ -34,7 +33,6 @@ class WorkThread(QThread):
     def run(self):  # 重写run方法
         self.process_many(self.paths)
 
-
     # 多线程处理文件夹
     def process_many(self, input_paths: List[str]):
         for i, path in enumerate(input_paths):
@@ -58,10 +56,11 @@ class WorkThread(QThread):
 
 
 class FormatTrans(QMainWindow):
-    def __init__(self, MAX_WORKERS=50):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.setWindowTitle('拖入文件')
         self.setAcceptDrops(True)
+
         # 用于显示当前正在处理的文件或者文件夹
         self.textBrowser = QTextBrowser()
         font = QFont()
@@ -94,9 +93,6 @@ class FormatTrans(QMainWindow):
         self.widget.setLayout(layout2)
         self.setCentralWidget(self.widget)
 
-        # self.textBrowser.setLineWrapMode()
-
-        self.MAX_WORKERS = MAX_WORKERS
         self.need_process_path = None
         self.save_dir = None
 
@@ -111,19 +107,6 @@ class FormatTrans(QMainWindow):
         else:
             e.ignore()
 
-    # def dropEvent(self, e):
-    #     for input_path in e.mimeData().urls():
-    #         input_path = os.path.abspath((input_path.toLocalFile()))
-    #         self.textBrowser.setText(f'processing... {input_path}')
-    #         if os.path.isfile(input_path) and input_path.endswith('.npy'):
-    #             self.process_one(input_path)
-    #         elif os.path.isdir(input_path):
-    #             need_process_paths = glob.glob(os.path.join(input_path,'*.npy'))
-    #             t = Thread(target=self.process_many, args=[need_process_paths])
-    #             t.start()
-
-    # self.textBrowser.clear()
-    # self.textBrowser.setText(f'finish!')
 
     def dropEvent(self, event):
         for input_path in event.mimeData().urls():
